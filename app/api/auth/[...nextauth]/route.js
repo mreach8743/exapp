@@ -1,10 +1,8 @@
 import NextAuth from 'next-auth';
-import GoogleProvider, { GoogleProfile } from 'next-auth/providers/google';
+import GoogleProvider from 'next-auth/providers/google';
 
 import User from '@models/user';
 import { connectToDB } from '@utils/database';
-import { OAuthUserConfig } from 'next-auth/providers';
-import { signIn } from 'next-auth/react';
 
 
 const handler = NextAuth({
@@ -16,14 +14,17 @@ const handler = NextAuth({
     ],
     callbacks: {
         async session({ session }) {
+            await connectToDB();
             const sessionUser = await User.findOne({email: session.user?.email });
-                (session.user).id = sessionUser._id.toString();
+            session.user.id = sessionUser._id.toString();
 
             return session;
         },
         async signIn({account, profile, user, credentials }) {
             try {
+                console.log('sign in');
                 await connectToDB();
+                console.log('signed in');
 
                 const userExists = await User.findOne({ email: profile?.email });
 
